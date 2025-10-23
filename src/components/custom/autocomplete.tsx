@@ -1,6 +1,13 @@
 import { Loader2 } from "lucide-react";
-import { useRef, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { Input } from "@/components/ui/input";
+import { debounce } from "lodash";
 
 type Option = {
   id: number;
@@ -28,6 +35,7 @@ const Autocomplete = ({
   displayKey,
   error,
 }: Props) => {
+  const [inputValue, setInputValue] = useState(value);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -38,32 +46,69 @@ const Autocomplete = ({
     isFetching,
   } = useQueryHook(searchQuery);
 
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      setSearchQuery(query);
+    }, 500),
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  });
+
   const handleInputChange = (val: string) => {
+    setInputValue(val);
     onChange(val);
-    setSearchQuery(val);
 
     if (val.length > 0) {
       setShowDropdown(true);
+      debouncedSearch(val);
     } else {
       setShowDropdown(false);
+      debouncedSearch.cancel();
+      setSearchQuery("");
     }
   };
 
   const handleSelect = (option: Option) => {
-    onChange(option[displayKey as keyof Option] as string);
+    const selectedValue = option[displayKey as keyof Option] as string;
+    setInputValue(selectedValue);
+    onChange(selectedValue);
     setShowDropdown(false);
     setSearchQuery("");
+    debouncedSearch.cancel();
   };
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
   return (
     <div ref={wrapperRef} className="relative">
       <Input
         type="text"
-        value={value}
+        value={inputValue}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           handleInputChange(e.target.value)
         }
-        onFocus={() => value && setShowDropdown(true)}
+        onFocus={() => inputValue && setShowDropdown(true)}
         placeholder={placeholder}
         className={error ? "border-destructive" : ""}
       />

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import Autocomplete from "./components/custom/autocomplete";
 import { useDepartments } from "./hooks/useApi";
 import { useState } from "react";
