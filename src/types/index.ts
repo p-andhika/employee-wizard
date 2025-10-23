@@ -21,6 +21,8 @@ export type Details = {
   employmentType: string;
   officeLocation: string;
   notes: string;
+  email?: string;
+  employeeId?: string;
 };
 
 export type Employee = BasicInfo & Details;

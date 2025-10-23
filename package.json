@@ -9,13 +9,14 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server1": "json-server --watch db-step1.json --port 4001 --delay 3000",
-    "server2": "json-server --watch db-step2.json --port 4001 --delay 3000"
+    "server2": "json-server --watch db-step2.json --port 4002 --delay 3000"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/vite": "^4.1.15",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-query-devtools": "^5.90.2",
+    "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
