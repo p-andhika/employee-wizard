@@ -3,6 +3,7 @@
 // import { useDepartments } from "./hooks/useApi";
 import { useState } from "react";
 import EmployeeList from "./components/custom/employee-list";
+import Wizard from "./components/custom/wizard";
 
 function App() {
   // const [basicInfo, setBasicInfo] = useState({
@@ -13,9 +14,26 @@ function App() {
   //   photo: "",
   // });
 
+  const [showWizard, setShownWizard] = useState(false);
+  const [role, setRole] = useState<"admin" | "ops">("admin");
+  const [step, setStep] = useState(1);
+
+  const openWizard = (selectedRole: "admin" | "ops") => {
+    setRole(selectedRole);
+    setStep(selectedRole === "ops" ? 2 : 1);
+    setShownWizard(true);
+  };
+
   return (
     <>
-      <EmployeeList />
+      <EmployeeList openWizard={openWizard} />
+
+      <Wizard
+        isOpen={showWizard}
+        setShownWizard={setShownWizard}
+        role={role}
+        step={step}
+      />
     </>
   );
 }

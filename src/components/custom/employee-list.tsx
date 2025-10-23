@@ -7,7 +7,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
-const EmployeeList = () => {
+type Props = {
+  openWizard: (selectedRole: "admin" | "ops") => void;
+};
+
+const EmployeeList = ({ openWizard }: Props) => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -24,8 +28,12 @@ const EmployeeList = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button>+ Add (Admin)</Button>
-                <Button variant="secondary">+ Add (Ops)</Button>
+                <Button onClick={() => openWizard("admin")}>
+                  + Add (Admin)
+                </Button>
+                <Button onClick={() => openWizard("ops")} variant="secondary">
+                  + Add (Ops)
+                </Button>
               </div>
             </div>
           </CardHeader>
