@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,17 +16,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import Autocomplete from "./autocomplete";
-import type { BasicInfo, Details, Employee } from "@/types";
-import { generateEmployeeId, validateEmail } from "@/lib/utils";
 import {
   useDepartments,
   useEmployees,
   useLocations,
   useSubmitEmployee,
 } from "@/hooks/useApi";
-import { Button } from "../ui/button";
+import { generateEmployeeId, validateEmail } from "@/lib/utils";
+import type { BasicInfo, Details, Employee } from "@/types";
+import { Check, Loader2 } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { toast } from "sonner";
+import { Button } from "../ui/button";
+import Autocomplete from "./autocomplete";
 import ImageUpload from "./image-upload";
 
 type Props = {
@@ -166,9 +166,19 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    // Only allow closing if not submitting
+    if (!isSubmitting) {
+      setShownWizard(newOpen);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={() => setShownWizard(false)}>
-      <DialogContent>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Add New Employee</DialogTitle>
           <DialogDescription>

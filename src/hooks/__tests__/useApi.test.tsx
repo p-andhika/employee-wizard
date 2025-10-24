@@ -7,107 +7,107 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the API service
 vi.mock("@/services/api", () => ({
-    apiService: {
-        getDepartments: vi.fn(),
-        getLocations: vi.fn(),
-        getAllEmployees: vi.fn(),
-        getBasicInfo: vi.fn(),
-        getDetails: vi.fn(),
-        postBasicInfo: vi.fn(),
-        postDetails: vi.fn(),
-    },
+  apiService: {
+    getDepartments: vi.fn(),
+    getLocations: vi.fn(),
+    getAllEmployees: vi.fn(),
+    getBasicInfo: vi.fn(),
+    getDetails: vi.fn(),
+    postBasicInfo: vi.fn(),
+    postDetails: vi.fn(),
+  },
 }));
 
 // Mock sonner toast
 vi.mock("sonner", () => ({
-    toast: {
-        info: vi.fn(),
-        success: vi.fn(),
-        error: vi.fn(),
-    },
+  toast: {
+    info: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 describe("useApi Hooks", () => {
-    let queryClient: QueryClient;
+  let queryClient: QueryClient;
 
-    beforeEach(() => {
-        queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {
-                    retry: false,
-                },
-            },
-        });
-        vi.clearAllMocks();
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    vi.clearAllMocks();
+  });
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  describe("useDepartments", () => {
+    it("should fetch departments when search query is provided", async () => {
+      vi.mocked(apiService.getDepartments).mockResolvedValue(mockDepartments);
+
+      const { result } = renderHook(() => useDepartments("eng"), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(apiService.getDepartments).toHaveBeenCalledWith("eng");
+      expect(result.current.data).toEqual(mockDepartments);
     });
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    it("should not fetch when search query is empty", () => {
+      const { result } = renderHook(() => useDepartments(""), { wrapper });
 
-    describe("useDepartments", () => {
-        it("should fetch departments when search query is provided", async () => {
-            vi.mocked(apiService.getDepartments).mockResolvedValue(mockDepartments);
+      expect(result.current.isFetching).toBe(false);
+      expect(apiService.getDepartments).not.toHaveBeenCalled();
+    });
+  });
 
-            const { result } = renderHook(() => useDepartments("eng"), { wrapper });
+  describe("useLocations", () => {
+    it("should fetch locations when search query is provided", async () => {
+      vi.mocked(apiService.getLocations).mockResolvedValue(mockLocations);
 
-            await waitFor(() => {
-                expect(result.current.isSuccess).toBe(true);
-            });
+      const { result } = renderHook(() => useLocations("new"), { wrapper });
 
-            expect(apiService.getDepartments).toHaveBeenCalledWith("eng");
-            expect(result.current.data).toEqual(mockDepartments);
-        });
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
 
-        it("should not fetch when search query is empty", () => {
-            const { result } = renderHook(() => useDepartments(""), { wrapper });
-
-            expect(result.current.isFetching).toBe(false);
-            expect(apiService.getDepartments).not.toHaveBeenCalled();
-        });
+      expect(apiService.getLocations).toHaveBeenCalledWith("new");
+      expect(result.current.data).toEqual(mockLocations);
     });
 
-    describe("useLocations", () => {
-        it("should fetch locations when search query is provided", async () => {
-            vi.mocked(apiService.getLocations).mockResolvedValue(mockLocations);
+    it("should not fetch when search query is empty", () => {
+      const { result } = renderHook(() => useLocations(""), { wrapper });
 
-            const { result } = renderHook(() => useLocations("new"), { wrapper });
+      expect(result.current.isFetching).toBe(false);
+      expect(apiService.getLocations).not.toHaveBeenCalled();
+    });
+  });
 
-            await waitFor(() => {
-                expect(result.current.isSuccess).toBe(true);
-            });
+  describe("useEmployees", () => {
+    it("should fetch all employees when enabled", async () => {
+      vi.mocked(apiService.getAllEmployees).mockResolvedValue(mockEmployees);
 
-            expect(apiService.getLocations).toHaveBeenCalledWith("new");
-            expect(result.current.data).toEqual(mockLocations);
-        });
+      const { result } = renderHook(() => useEmployees(true), { wrapper });
 
-        it("should not fetch when search query is empty", () => {
-            const { result } = renderHook(() => useLocations(""), { wrapper });
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
 
-            expect(result.current.isFetching).toBe(false);
-            expect(apiService.getLocations).not.toHaveBeenCalled();
-        });
+      expect(apiService.getAllEmployees).toHaveBeenCalled();
+      expect(result.current.data).toEqual(mockEmployees);
     });
 
-    describe("useEmployees", () => {
-        it("should fetch all employees when enabled", async () => {
-            vi.mocked(apiService.getAllEmployees).mockResolvedValue(mockEmployees);
+    it("should not fetch when disabled", () => {
+      const { result } = renderHook(() => useEmployees(false), { wrapper });
 
-            const { result } = renderHook(() => useEmployees(true), { wrapper });
-
-            await waitFor(() => {
-                expect(result.current.isSuccess).toBe(true);
-            });
-
-            expect(apiService.getAllEmployees).toHaveBeenCalled();
-            expect(result.current.data).toEqual(mockEmployees);
-        });
-
-        it("should not fetch when disabled", () => {
-            const { result } = renderHook(() => useEmployees(false), { wrapper });
-
-            expect(result.current.isFetching).toBe(false);
-            expect(apiService.getAllEmployees).not.toHaveBeenCalled();
-        });
+      expect(result.current.isFetching).toBe(false);
+      expect(apiService.getAllEmployees).not.toHaveBeenCalled();
     });
+  });
 });

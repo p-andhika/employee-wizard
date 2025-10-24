@@ -66,7 +66,7 @@ describe("Utils", () => {
       const result = cn(
         "base-class",
         isActive && "active",
-        isHidden && "hidden"
+        isHidden && "hidden",
       );
       expect(result).toBe("base-class active");
     });
