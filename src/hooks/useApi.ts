@@ -1,6 +1,7 @@
 import { apiService } from "@/services/api";
 import type { BasicInfo, Details } from "@/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export const useDepartments = (searchQuery: string) => {
   return useQuery({
@@ -45,11 +46,14 @@ export const useSubmitBasicInfo = () => {
 
   return useMutation({
     mutationFn: (data: BasicInfo) => apiService.postBasicInfo(data),
-    onSuccess: (data) => {
+    onMutate: () => {
+      toast.info("Submitting basic info...");
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       queryClient.invalidateQueries({ queryKey: ["basicInfo"] });
 
-      console.log("Basic info submitted successfully:", data);
+      toast.success("Basic info submitted successfully");
     },
     onError: (error) => {
       console.error("Failed to submit basic info:", error);
@@ -62,11 +66,14 @@ export const useSubmitDetails = () => {
 
   return useMutation({
     mutationFn: (data: Details) => apiService.postDetails(data),
-    onSuccess: (data) => {
+    onMutate: () => {
+      toast.info("Submitting details...");
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       queryClient.invalidateQueries({ queryKey: ["details"] });
 
-      console.log("Details submitted successfully:", data);
+      toast.success("Details submitted successfully");
     },
     onError: (error) => {
       console.error("Failed to submit details:", error);
@@ -93,6 +100,8 @@ export const useSubmitEmployee = () => {
 
       queryClient.invalidateQueries({ queryKey: ["employees"] });
 
+      toast.success("All data processed successfully");
+
       return { success: true };
     } catch (error) {
       console.error("Failed to submit employee:", error);
@@ -102,12 +111,7 @@ export const useSubmitEmployee = () => {
 
   return {
     submitEmployee,
-    isSubmittingBasicInfo: submitBasicInfo.isPending,
-    isSubmittingDetails: submitDetails.isPending,
     isSubmitting: submitBasicInfo.isPending || submitDetails.isPending,
-    basicInfoSuccess: submitBasicInfo.isSuccess,
-    detailsSuccess: submitDetails.isSuccess,
-    isSuccess: submitBasicInfo.isSuccess && submitDetails.isSuccess,
     error: submitBasicInfo.error || submitDetails.error,
     reset: () => {
       submitBasicInfo.reset();
@@ -115,4 +119,3 @@ export const useSubmitEmployee = () => {
     },
   };
 };
-

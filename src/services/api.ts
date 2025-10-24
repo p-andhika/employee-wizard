@@ -1,4 +1,10 @@
-import type { BasicInfo, Department, Details, Employee } from "@/types";
+import type {
+  BasicInfo,
+  Department,
+  Details,
+  Employee,
+  Location,
+} from "@/types";
 import axios from "axios";
 
 const API_CONFIG = {
@@ -80,4 +86,3 @@ export const apiService = {
     }
   },
 };
-

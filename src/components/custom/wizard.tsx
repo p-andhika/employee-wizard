@@ -6,7 +6,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +24,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import Autocomplete from "./autocomplete";
 import type { BasicInfo, Details, Employee } from "@/types";
 import { generateEmployeeId, validateEmail } from "@/lib/utils";
-import { useDepartments, useEmployees } from "@/hooks/useApi";
+import {
+  useDepartments,
+  useEmployees,
+  useLocations,
+  useSubmitEmployee,
+} from "@/hooks/useApi";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
+import ImageUpload from "./image-upload";
 
 type Props = {
   setShownWizard: Dispatch<SetStateAction<boolean>>;
@@ -77,7 +84,7 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
     return () => clearTimeout(autoSaveTimeout.current);
   }, [basicInfo, details, saveDraft, isOpen]);
 
-  // Load draft on mount
+  // load draft on mount
   useEffect(() => {
     if (isOpen) {
       const draftKey = role === "admin" ? "draft_admin" : "draft_ops";
@@ -91,9 +98,10 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
     }
   }, [role, isOpen]);
 
-  const { data: employees = [] } = useEmployees(isOpen);
+  const { data: employees = [], refetch: refetchEmployees } =
+    useEmployees(isOpen);
 
-  // Generate Employee ID
+  // generate employee id
   useEffect(() => {
     if (basicInfo.department && !basicInfo.employeeId) {
       const existingIds = employees
@@ -103,8 +111,6 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
       setBasicInfo((prev) => ({ ...prev, employeeId: newId }));
     }
   }, [basicInfo.department, employees]);
-
-  console.log({ basicInfo });
 
   // validation
   const isStep1Valid = () => {
@@ -117,7 +123,50 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
     );
   };
 
-  const handleClearDraft = () => {};
+  const isStep2Valid = () => {
+    return details.employmentType && details.officeLocation;
+  };
+
+  const handleClearDraft = () => {
+    const draftKey = role === "admin" ? "draft_admin" : "draft_ops";
+    localStorage.removeItem(draftKey);
+    setBasicInfo({
+      fullName: "",
+      email: "",
+      department: "",
+      role: "",
+      employeeId: "",
+    });
+    setDetails({
+      photo: "",
+      employmentType: "",
+      officeLocation: "",
+      notes: "",
+    });
+    setStep(1);
+    resetSubmit();
+  };
+
+  const {
+    submitEmployee,
+    isSubmitting,
+    reset: resetSubmit,
+  } = useSubmitEmployee();
+
+  const handleSubmit = async () => {
+    try {
+      const res = await submitEmployee(basicInfo, details);
+
+      if (res.success) {
+        setShownWizard(false);
+        resetSubmit();
+        refetchEmployees();
+        handleClearDraft();
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={() => setShownWizard(false)}>
@@ -257,6 +306,98 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
                     Next Step
                   </Button>
                   <Button onClick={handleClearDraft} variant="outline">
+                    Clear Draft
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Details */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Photo</Label>
+                  <ImageUpload
+                    value={details.photo}
+                    onChange={(val) => setDetails({ ...details, photo: val })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="employmentType">Employment Type *</Label>
+                  <Select
+                    value={details.employmentType}
+                    onValueChange={(val) =>
+                      setDetails({ ...details, employmentType: val })
+                    }
+                  >
+                    <SelectTrigger id="employmentType">
+                      <SelectValue placeholder="Select employment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Full-time">Full-time</SelectItem>
+                      <SelectItem value="Part-time">Part-time</SelectItem>
+                      <SelectItem value="Contract">Contract</SelectItem>
+                      <SelectItem value="Intern">Intern</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="officeLocation">Office Location *</Label>
+                  <Autocomplete
+                    value={details.officeLocation}
+                    onChange={(val) =>
+                      setDetails({ ...details, officeLocation: val })
+                    }
+                    useQueryHook={useLocations}
+                    placeholder="Search location..."
+                    displayKey="name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={details.notes}
+                    onChange={(e) =>
+                      setDetails({ ...details, notes: e.target.value })
+                    }
+                    placeholder="Additional notes..."
+                    rows={4}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  {role === "admin" && (
+                    <Button
+                      onClick={() => setStep(1)}
+                      disabled={isSubmitting}
+                      variant="outline"
+                    >
+                      Back
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!isStep2Valid() || isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleClearDraft}
+                    disabled={isSubmitting}
+                    variant="outline"
+                  >
                     Clear Draft
                   </Button>
                 </div>

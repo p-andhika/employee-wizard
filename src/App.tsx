@@ -1,20 +1,9 @@
-// import Autocomplete from "./components/custom/autocomplete";
-// import ImageUpload from "./components/custom/image-upload";
-// import { useDepartments } from "./hooks/useApi";
 import { Toaster } from "sonner";
 import { useState } from "react";
 import EmployeeList from "./components/custom/employee-list";
 import Wizard from "./components/custom/wizard";
 
 function App() {
-  // const [basicInfo, setBasicInfo] = useState({
-  //   department: "",
-  // });
-  //
-  // const [details, setDetails] = useState({
-  //   photo: "",
-  // });
-
   const [showWizard, setShownWizard] = useState(false);
   const [role, setRole] = useState<"admin" | "ops">("admin");
   const [step, setStep] = useState(1);
@@ -37,7 +26,7 @@ function App() {
         step={step}
       />
 
-      <Toaster richColors />
+      <Toaster richColors expand />
     </>
   );
 }
