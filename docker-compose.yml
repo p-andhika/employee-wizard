@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   # React Frontend Application
@@ -19,7 +19,15 @@ services:
     networks:
       - employee-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -37,7 +45,15 @@ services:
     networks:
       - employee-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4001"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:4001",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,7 +71,15 @@ services:
     networks:
       - employee-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4002"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:4002",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -24,6 +24,7 @@ docker-compose up
 Access the application at `http://localhost:3000`
 
 **Services:**
+
 - React App: http://localhost:3000
 - JSON Server 1: http://localhost:4001 (Departments & Basic Info)
 - JSON Server 2: http://localhost:4002 (Locations & Details)
@@ -43,11 +44,13 @@ The app will automatically rebuild on file changes.
 ### Production (docker-compose.yml)
 
 1. **app** - React Vite application served with `serve`
+
    - Port: 3000
    - Health check enabled
    - Environment variables set for API URLs
 
 2. **server1** - JSON Server instance 1
+
    - Port: 4001
    - Serves db-step1.json
    - Health check enabled
@@ -60,6 +63,7 @@ The app will automatically rebuild on file changes.
 ### Development (docker-compose.dev.yml)
 
 Same services but with:
+
 - Volume mounts for hot reload
 - Dockerfile.dev for development builds
 - Simplified healthchecks
