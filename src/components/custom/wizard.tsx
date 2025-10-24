@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Dispatch, SetStateAction } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { Check } from "lucide-react";
 
 type Props = {

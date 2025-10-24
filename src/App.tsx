@@ -1,6 +1,7 @@
 // import Autocomplete from "./components/custom/autocomplete";
 // import ImageUpload from "./components/custom/image-upload";
 // import { useDepartments } from "./hooks/useApi";
+import { Toaster } from "sonner";
 import { useState } from "react";
 import EmployeeList from "./components/custom/employee-list";
 import Wizard from "./components/custom/wizard";
@@ -34,6 +35,8 @@ function App() {
         role={role}
         step={step}
       />
+
+      <Toaster richColors />
     </>
   );
 }
