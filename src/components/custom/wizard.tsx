@@ -98,8 +98,7 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
     }
   }, [role, isOpen]);
 
-  const { data: employees = [], refetch: refetchEmployees } =
-    useEmployees(isOpen);
+  const { data: employees = [] } = useEmployees(isOpen);
 
   // generate employee id
   useEffect(() => {
@@ -160,7 +159,6 @@ const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
       if (res.success) {
         setShownWizard(false);
         resetSubmit();
-        refetchEmployees();
         handleClearDraft();
       }
     } catch (error) {
