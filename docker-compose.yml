@@ -1,0 +1,66 @@
+version: '3.9'
+
+services:
+  # React Frontend Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL_1=http://server1:4001
+      - VITE_API_URL_2=http://server2:4002
+    depends_on:
+      server1:
+        condition: service_healthy
+      server2:
+        condition: service_healthy
+    networks:
+      - employee-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # JSON Server 1 (Departments & Basic Info)
+  server1:
+    image: node:20-alpine
+    working_dir: /app
+    command: npx json-server --watch db-step1.json --host 0.0.0.0 --port 4001 --delay 3000
+    volumes:
+      - ./db-step1.json:/app/db-step1.json
+    ports:
+      - "4001:4001"
+    networks:
+      - employee-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # JSON Server 2 (Locations & Details)
+  server2:
+    image: node:20-alpine
+    working_dir: /app
+    command: npx json-server --watch db-step2.json --host 0.0.0.0 --port 4002 --delay 3000
+    volumes:
+      - ./db-step2.json:/app/db-step2.json
+    ports:
+      - "4002:4002"
+    networks:
+      - employee-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  employee-network:
+    driver: bridge

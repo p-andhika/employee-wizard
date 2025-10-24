@@ -1,0 +1,19 @@
+# Dockerfile for Development with Hot Reload
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy entire project
+COPY . .
+
+# Expose ports
+EXPOSE 3000 4001 4002
+
+# Default command (can be overridden)
+CMD ["npm", "run", "dev"]
