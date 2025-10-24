@@ -30,8 +30,9 @@ function App() {
       <EmployeeList openWizard={openWizard} />
 
       <Wizard
-        isOpen={showWizard}
         setShownWizard={setShownWizard}
+        setStep={setStep}
+        isOpen={showWizard}
         role={role}
         step={step}
       />

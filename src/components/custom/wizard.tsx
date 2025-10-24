@@ -1,4 +1,13 @@
 import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+import { Check } from "lucide-react";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -6,17 +15,110 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { type Dispatch, type SetStateAction } from "react";
-import { Check } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Autocomplete from "./autocomplete";
+import type { BasicInfo, Details, Employee } from "@/types";
+import { generateEmployeeId, validateEmail } from "@/lib/utils";
+import { useDepartments, useEmployees } from "@/hooks/useApi";
+import { Button } from "../ui/button";
+import { toast } from "sonner";
 
 type Props = {
-  isOpen: boolean;
   setShownWizard: Dispatch<SetStateAction<boolean>>;
+  setStep: Dispatch<SetStateAction<number>>;
+  isOpen: boolean;
   role: "admin" | "ops";
   step: number;
 };
 
-const Wizard = ({ isOpen, setShownWizard, role, step }: Props) => {
+const Wizard = ({ isOpen, setShownWizard, role, step, setStep }: Props) => {
+  const [basicInfo, setBasicInfo] = useState<BasicInfo>({
+    fullName: "",
+    email: "",
+    department: "",
+    role: "",
+    employeeId: "",
+  });
+
+  const [details, setDetails] = useState<Details>({
+    photo: "",
+    employmentType: "",
+    officeLocation: "",
+    notes: "",
+  });
+
+  const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  const saveDraft = useCallback(() => {
+    const draftKey = role === "admin" ? "draft_admin" : "draft_ops";
+    const draft = { basicInfo, details, step };
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+    toast.info("Draft saved!");
+  }, [basicInfo, details, step, role]);
+
+  useEffect(() => {
+    if (isOpen) {
+      clearTimeout(autoSaveTimeout.current);
+      autoSaveTimeout.current = setTimeout(() => {
+        saveDraft();
+      }, 2000);
+    }
+
+    return () => clearTimeout(autoSaveTimeout.current);
+  }, [basicInfo, details, saveDraft, isOpen]);
+
+  // Load draft on mount
+  useEffect(() => {
+    if (isOpen) {
+      const draftKey = role === "admin" ? "draft_admin" : "draft_ops";
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        setBasicInfo(draft.basicInfo || basicInfo);
+        setDetails(draft.details || details);
+        setStep(draft.step || 1);
+      }
+    }
+  }, [role, isOpen]);
+
+  const { data: employees = [] } = useEmployees(isOpen);
+
+  // Generate Employee ID
+  useEffect(() => {
+    if (basicInfo.department && !basicInfo.employeeId) {
+      const existingIds = employees
+        .map((e: Employee) => e.employeeId)
+        .filter(Boolean);
+      const newId = generateEmployeeId(basicInfo.department, existingIds);
+      setBasicInfo((prev) => ({ ...prev, employeeId: newId }));
+    }
+  }, [basicInfo.department, employees]);
+
+  console.log({ basicInfo });
+
+  // validation
+  const isStep1Valid = () => {
+    return (
+      basicInfo.fullName &&
+      validateEmail(basicInfo.email) &&
+      basicInfo.department &&
+      basicInfo.role &&
+      basicInfo.employeeId
+    );
+  };
+
+  const handleClearDraft = () => {};
+
   return (
     <Dialog open={isOpen} onOpenChange={() => setShownWizard(false)}>
       <DialogContent>
@@ -60,6 +162,106 @@ const Wizard = ({ isOpen, setShownWizard, role, step }: Props) => {
                 </div>
               </div>
             </div>
+
+            {/* Step 1: Basic Info */}
+            {step === 1 && role === "admin" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Input
+                    id="fullName"
+                    value={basicInfo.fullName}
+                    onChange={(e) =>
+                      setBasicInfo({ ...basicInfo, fullName: e.target.value })
+                    }
+                    placeholder="Enter full name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={basicInfo.email}
+                    onChange={(e) =>
+                      setBasicInfo({ ...basicInfo, email: e.target.value })
+                    }
+                    placeholder="employee@company.com"
+                    className={
+                      basicInfo.email && !validateEmail(basicInfo.email)
+                        ? "border-destructive"
+                        : ""
+                    }
+                  />
+                  {basicInfo.email && !validateEmail(basicInfo.email) && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      Invalid email format
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department *</Label>
+                  <Autocomplete
+                    value={basicInfo.department}
+                    onChange={(val) =>
+                      setBasicInfo({
+                        ...basicInfo,
+                        department: val,
+                        employeeId: "",
+                      })
+                    }
+                    useQueryHook={useDepartments}
+                    placeholder="Search department..."
+                    displayKey="name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role *</Label>
+                  <Select
+                    value={basicInfo.role}
+                    onValueChange={(val) =>
+                      setBasicInfo({ ...basicInfo, role: val })
+                    }
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ops">Ops</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Engineer">Engineer</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="employeeId">Employee ID</Label>
+                  <Input
+                    id="employeeId"
+                    value={basicInfo.employeeId}
+                    readOnly
+                    className="bg-muted"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    onClick={() => setStep(2)}
+                    disabled={!isStep1Valid()}
+                    className="flex-1"
+                  >
+                    Next Step
+                  </Button>
+                  <Button onClick={handleClearDraft} variant="outline">
+                    Clear Draft
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </DialogContent>
